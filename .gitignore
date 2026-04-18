@@ -10,6 +10,9 @@ server/node_modules/
 !.env.example
 !**/.env.example
 
+# generated files
+server/src/generated/
+
 # build output
 dist/
 build/
