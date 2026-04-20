@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma.js";
 import { signToken } from "../utils/jwt.js";
+import { AuthRequest } from "../middleware/authMiddleware.js";
 
 export const signup = async (req: Request, res: Response) => {
     try{
@@ -78,3 +79,28 @@ export const login  = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'Failed to log in' });
     }
 }
+
+export const me  = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id }, 
+            select: {
+                id: true,
+                email: true, 
+                createdAt: true, 
+            },
+        });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        return res.status(200).json({ user }); 
+    } catch (error) {
+        console.error('ME ERROR:', error);
+        return res.status(500).json({ error: 'Failed to fetch user'})
+
+    }
+};
