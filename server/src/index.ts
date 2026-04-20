@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import prisma from './lib/prisma.js';
-import authRoutes from './routes/authRoutes.js'
+import authRoutes from './routes/authRoutes.js';
+import itemRoutes from './routes/itemRoutes.js';
 console.log('index.ts is running');
 
 dotenv.config();
@@ -37,7 +38,8 @@ app.get('/api/test-db', async (_req, res) => {
 
 
 
-app.use('/api/auth', authRoutes); 
+app.use('/api/auth', authRoutes);
+app.use('/api/items', itemRoutes); 
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
