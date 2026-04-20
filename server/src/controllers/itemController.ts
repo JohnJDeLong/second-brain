@@ -34,3 +34,22 @@ export const createItem = async (req: AuthRequest, res: Response) => {
     }
 
 };
+
+export const getItems = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const items = await prisma.savedItem.findMany({
+            where: { userId: req.user.id },
+            orderBy: { createdAt: 'desc' },
+        });
+
+        return res.status(200).json({ items }); 
+
+    } catch (error) {
+        console.error('GET ITEMS ERROR:', error); 
+        return res.status(500).json({ error: 'Failed to fetch items' });
+    }
+};
