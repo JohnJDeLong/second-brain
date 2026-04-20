@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import prisma from './lib/prisma.js';
+import authRoutes from './routes/authRoutes.js'
 console.log('index.ts is running');
 
 dotenv.config();
@@ -34,33 +35,12 @@ app.get('/api/test-db', async (_req, res) => {
   }
 });
 
+
+
+app.use('/api/auth', authRoutes); 
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
 
 
-// import express from 'express';
-
-// console.log('INDEX LOADED');
-
-// const app = express();
-// const PORT = 3000;
-
-// app.use((req, _res, next) => {
-//   console.log('REQUEST:', req.method, req.url);
-//   next();
-// });
-
-// app.get('/api/health', (_req, res) => {
-//   console.log('HIT HEALTH');
-//   res.json({ message: 'health works' });
-// });
-
-// app.get('/api/test-db', (_req, res) => {
-//   console.log('HIT TEST DB');
-//   res.json({ users: [] });
-// });
-
-// app.listen(PORT, () => {
-//   console.log(`Server listening on port ${PORT}`);
-// });
