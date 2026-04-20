@@ -34,6 +34,35 @@ Run these from `server` unless noted otherwise.
 - `PORT` defaults to `3000` when not set.
 - Do not commit real `.env` files or generated Prisma output.
 
+## Commit Conventions
+
+Follow the Conventional Commits spec: `<type>(<scope>): <short description>`
+
+Common types:
+- `feat` — new feature
+- `fix` — bug fix
+- `chore` — maintenance, config, tooling
+- `docs` — documentation only
+- `refactor` — code change that isn't a fix or feature
+- `test` — adding or updating tests
+- `style` — formatting, no logic change
+
+Examples:
+- `feat(auth): add JWT middleware for protected routes`
+- `fix(prisma): resolve connection timeout on cold start`
+- `chore(deps): upgrade express to 5.2.1`
+- `docs(readme): add setup instructions and environment variables`
+- `refactor(items): extract save logic into dedicated service`
+- `test(auth): add unit tests for password hashing`
+
+Rules:
+- Keep subject line under 72 characters
+- Use imperative mood — "add", not "added" or "adds"
+- Lowercase after the colon
+- No period at the end
+
+- This follows the Conventional Commits spec, which is the most common standard in professional projects.   
+
 ## Coding Notes
 
 - Keep TypeScript strict-compatible.
