@@ -79,3 +79,69 @@ export const getItemById = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ error: 'Failed to fetch item' });
   }
 };
+
+export const updateItem = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+        
+        const id = req.params.id as string;
+        const { title, url, rawContent, selectedText, userNote } =req.body;
+
+        const existingItem = await prisma.savedItem.findFirst({
+            where: {
+                id,
+                userId: req.user.id,
+            },
+        });
+        if (!existingItem) {
+            return res.status(404).json({ error: 'Item not found' });
+        }
+
+        const updatedItem = await prisma.savedItem.update({
+            where: { id }, 
+            data: {
+                ...(title !== undefined && { title }),
+                ...(url !== undefined && { url }),
+                ...(rawContent !== undefined && { rawContent }),
+                ...(selectedText !== undefined && { selectedText }),
+                ...(userNote !== undefined && { userNote }),
+            },
+        });
+        return res.status(200).json({ item: updatedItem }); 
+    } catch (error) {
+        console.error('UPDATE ITEM ERROR:', error); 
+        return res.status(500).json({ error: 'Failed to update item'})
+    }
+};
+
+export const deleteItem = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const id = req.params.id as string;
+
+    const existingItem = await prisma.savedItem.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+    });
+
+    if (!existingItem) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    await prisma.savedItem.delete({
+      where: { id },
+    });
+
+    return res.status(200).json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('DELETE ITEM ERROR:', error);
+    return res.status(500).json({ error: 'Failed to delete item' });
+  }
+};
