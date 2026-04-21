@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 import prisma from './lib/prisma.js';
 import authRoutes from './routes/authRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
+import { notFound } from './middleware/notFound.js';
+import { errorHandler } from './middleware/errorHandler.js';
+
 console.log('index.ts is running');
 
 dotenv.config();
@@ -40,6 +43,9 @@ app.get('/api/test-db', async (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes); 
+
+app.use(notFound);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);

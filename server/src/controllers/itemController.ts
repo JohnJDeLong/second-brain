@@ -1,8 +1,8 @@
-import { Response } from 'express';
+import { NextFunction, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 
-export const createItem = async (req: AuthRequest, res: Response) => {
+export const createItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         if (!req.user) {
             return res.status(401).json({ error: 'Unauthorized' });
