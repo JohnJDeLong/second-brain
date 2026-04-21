@@ -1,6 +1,7 @@
 import { NextFunction, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { AuthRequest } from '../middleware/authMiddleware.js';
+import { AppError } from '../types/errors.js';
 
 export const createItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -54,10 +55,13 @@ export const getItems = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getItemById = async (req: AuthRequest, res: Response) => {
+export const getItemById = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      const err = new Error ('Unauthorized') as AppError;
+      err.status = 401;
+      err.log = 'itemController.getItemById: req.user missing';
+      return next(err); 
     }
 
     const id = req.params.id as string;
@@ -70,20 +74,25 @@ export const getItemById = async (req: AuthRequest, res: Response) => {
     });
 
     if (!item) {
-      return res.status(404).json({ error: 'Item not found' });
+        const err = new Error('Item not found') as AppError;
+        err.status = 404;
+        err.log = `itemController.getItemById: no item found for id ${id}`;
+        return next(err);
     }
 
     return res.status(200).json({ item });
   } catch (error) {
-    console.error('GET ITEM BY ID ERROR:', error);
-    return res.status(500).json({ error: 'Failed to fetch item' });
+   return next(error); 
   }
 };
 
-export const updateItem = async (req: AuthRequest, res: Response) => {
+export const updateItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         if (!req.user) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            const err = new Error('Unauthorized') as AppError;
+            err.status = 401;
+            err.log = 'itemController.updateItem: req.user missing';
+            return next(err);
         }
         
         const id = req.params.id as string;
@@ -96,7 +105,10 @@ export const updateItem = async (req: AuthRequest, res: Response) => {
             },
         });
         if (!existingItem) {
-            return res.status(404).json({ error: 'Item not found' });
+            const err = new Error('Item not found') as AppError;
+            err.status = 404;
+            err.log = `itemController.updateItem: no item found for id ${id}`;
+            return next(err);
         }
 
         const updatedItem = await prisma.savedItem.update({
@@ -111,15 +123,17 @@ export const updateItem = async (req: AuthRequest, res: Response) => {
         });
         return res.status(200).json({ item: updatedItem }); 
     } catch (error) {
-        console.error('UPDATE ITEM ERROR:', error); 
-        return res.status(500).json({ error: 'Failed to update item'})
+        return next(error); 
     }
 };
 
-export const deleteItem = async (req: AuthRequest, res: Response) => {
+export const deleteItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      const err = new Error('Unauthorized') as AppError;
+      err.status = 401;
+      err.log = 'itemController.deleteItem: req.user missing';
+      return next(err);
     }
 
     const id = req.params.id as string;
@@ -132,7 +146,10 @@ export const deleteItem = async (req: AuthRequest, res: Response) => {
     });
 
     if (!existingItem) {
-      return res.status(404).json({ error: 'Item not found' });
+      const err = new Error('Item not found') as AppError;
+      err.status = 404;
+      err.log = `itemController.deleteItem: no item found for id ${id}`;
+      return next(err);
     }
 
     await prisma.savedItem.delete({
@@ -141,7 +158,6 @@ export const deleteItem = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({ message: 'Item deleted successfully' });
   } catch (error) {
-    console.error('DELETE ITEM ERROR:', error);
-    return res.status(500).json({ error: 'Failed to delete item' });
+    return next(error);
   }
 };
