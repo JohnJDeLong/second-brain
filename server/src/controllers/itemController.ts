@@ -53,3 +53,29 @@ export const getItems = async (req: AuthRequest, res: Response) => {
         return res.status(500).json({ error: 'Failed to fetch items' });
     }
 };
+
+export const getItemById = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const id = req.params.id as string;
+
+    const item = await prisma.savedItem.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+    });
+
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    return res.status(200).json({ item });
+  } catch (error) {
+    console.error('GET ITEM BY ID ERROR:', error);
+    return res.status(500).json({ error: 'Failed to fetch item' });
+  }
+};
