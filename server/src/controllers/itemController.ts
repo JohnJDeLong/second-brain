@@ -6,13 +6,19 @@ import { AppError } from '../types/errors.js';
 export const createItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         if (!req.user) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            const err = new Error('Unauthorized') as AppError;
+            err.status = 401;
+            err.log = 'itemController.createItem: req.user missing';
+            return next(err);
         }
 
         const { title, url, rawContent, selectedText, userNote } = req.body;
 
         if (!title || !url || !rawContent) {
-            return res.status(400).json({ error: 'title, url, and rawContent are required'});
+            const err = new Error('title, url and rawContent are all required') as AppError;
+            err.status = 400; 
+            err.log = 'itemController.createItem: missing required fields';
+            return next(err);
         }
 
         const item = await prisma.savedItem.create({
@@ -29,17 +35,18 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
         return res.status(201).json({ item }); 
 
     } catch (error) {
-        console.error('CREATE ITEM ERROR:', error );
-        return res.status(500).json({ error: 'Failed to create item'})
-
+        return next(error);
     }
 
 };
 
-export const getItems = async (req: AuthRequest, res: Response) => {
+export const getItems = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         if (!req.user) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            const err = new Error('Unauthorized') as AppError;
+            err.status = 401;
+            err.log = 'itemController.getItems: req.user missing';
+            return next(err);
         }
 
         const items = await prisma.savedItem.findMany({
@@ -50,8 +57,7 @@ export const getItems = async (req: AuthRequest, res: Response) => {
         return res.status(200).json({ items }); 
 
     } catch (error) {
-        console.error('GET ITEMS ERROR:', error); 
-        return res.status(500).json({ error: 'Failed to fetch items' });
+        return next(error); 
     }
 };
 

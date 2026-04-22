@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt.js';
+import { AppError } from '../types/errors.js';
 
 export interface AuthRequest extends Request {
     user?: {
@@ -7,11 +8,14 @@ export interface AuthRequest extends Request {
     };
 }
 
-export const requireAuth = ( req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireAuth = ( req: AuthRequest, _res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        const err = new Error('Unauthorized') as AppError; 
+        err.status = 401; 
+        err.log = 'authMiddleware.requireAuth: missing or malformed authorization header';
+        return next (err); 
     }
 
     const token = authHeader.split(' ')[1];
@@ -20,8 +24,10 @@ export const requireAuth = ( req: AuthRequest, res: Response, next: NextFunction
         const payload = verifyToken(token);
         req.user = { id: payload.id }; 
         return next(); 
-
     } catch (error) {
-        return res.status(401).json({ error: 'Invalid token' });
+        const err = new Error('Invalid token') as AppError;
+        err.status = 401;
+        err.log = 'authMiddleware.requireAuth: token verification failed';
+        return next(err);
     }
  }

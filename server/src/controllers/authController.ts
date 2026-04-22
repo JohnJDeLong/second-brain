@@ -1,14 +1,18 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction} from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../lib/prisma.js";
 import { signToken } from "../utils/jwt.js";
 import { AuthRequest } from "../middleware/authMiddleware.js";
+import { AppError } from "../types/errors.js";
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const { email, password } = req.body; 
         if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+            const err = new Error("Email and password are required") as AppError;
+            err.status = 400;
+            err.log = "authController.signup: missing email or password";
+            return next(err);
         }
         
         const existingUser = await prisma.user.findUnique({
@@ -16,7 +20,10 @@ export const signup = async (req: Request, res: Response) => {
         });
 
         if (existingUser) {
-            return res.status(400).json({ error: 'Email already in use'}); 
+            const err = new Error("Email already in use") as AppError;
+            err.status = 400;
+            err.log = `authController.signup: email already in use (${email})`;
+            return next(err);
         }
 
         const passwordHash = await bcrypt.hash(password,10); 
@@ -38,16 +45,18 @@ export const signup = async (req: Request, res: Response) => {
             },
         });
     } catch (error) {
-        console.error('SIGNUP ERROR:', error);
-        return res.status(500).json({ error: 'Failed to sign up' });
+        return next(error);
     }
 };
 
-export const login  = async (req: Request, res: Response) => {
+export const login  = async (req: Request, res: Response, next: NextFunction) => {
     try{
         const { email, password } = req.body; 
         if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
+            const err = new Error("Email and password are required") as AppError;
+            err.status = 400;
+            err.log = "authController.login: missing email or password";
+            return next(err);
         }
 
         const user = await prisma.user.findUnique({
@@ -55,13 +64,19 @@ export const login  = async (req: Request, res: Response) => {
         });
 
         if(!user) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            const err = new Error("Invalid credentials") as AppError;
+            err.status = 401;
+            err.log = `authController.login: no user found for email (${email})`;
+            return next(err);
         }
 
         const isMatch = await bcrypt.compare(password, user.passwordHash);
 
         if(!isMatch) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            const err = new Error("Invalid credentials") as AppError;
+            err.status = 401;
+            err.log = `authController.login: password mismatch for email (${email})`;
+            return next(err);
         }
 
         const token = signToken(user.id); 
@@ -75,15 +90,17 @@ export const login  = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
-        console.error('LOGIN ERROR:', error);
-        return res.status(500).json({ error: 'Failed to log in' });
+       return next(error);
     }
 }
 
-export const me  = async (req: AuthRequest, res: Response) => {
+export const me  = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         if (!req.user) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            const err = new Error('Unauthorized') as AppError;
+            err.status = 401;
+            err.log = "authController.me: req.user missing" 
+            return next(err);
         }
         const user = await prisma.user.findUnique({
             where: { id: req.user.id }, 
@@ -94,13 +111,14 @@ export const me  = async (req: AuthRequest, res: Response) => {
             },
         });
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            const err = new Error("User not found") as AppError;
+            err.status = 404; 
+            err.log = `authcontroller.me: no user found for id ${req.user.id}`;
+            return next(err);
         }
 
         return res.status(200).json({ user }); 
     } catch (error) {
-        console.error('ME ERROR:', error);
-        return res.status(500).json({ error: 'Failed to fetch user'})
-
+        return next(error); 
     }
 };
