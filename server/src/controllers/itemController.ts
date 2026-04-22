@@ -14,19 +14,44 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
 
         const { title, url, rawContent, selectedText, userNote } = req.body;
 
-        if (!title || !url || !rawContent) {
-            const err = new Error('title, url and rawContent are all required') as AppError;
+        if (
+            typeof title !== 'string' || 
+            typeof url !== 'string' ||
+            typeof rawContent !== 'string'
+        ) {
+            const err = new Error('title, url, and rawContent must be strings') as AppError;
+            err.status = 400;
+            err.log = 'itemController.createItem: required fields must be strings';
+            return next(err); 
+        }
+
+        if(!title.trim() || !url.trim() || !rawContent.trim()) {
+            const err = new Error('title, url and rawContent are required') as AppError; 
+            err.status = 400;
+            err.log = 'itmeController.createItem: required fields cannot be empty'; 
+            return next(err); 
+        }
+
+        if (selectedText !== undefined && typeof selectedText !== 'string') {
+            const err = new Error('selectedText must be a string') as AppError; 
             err.status = 400; 
-            err.log = 'itemController.createItem: missing required fields';
-            return next(err);
+            err.log = 'itemController.createItem: required fields cannot be empty'; 
+            return next(err); 
+        }
+
+        if (userNote !== undefined && typeof userNote !== 'string') {
+            const err = new Error('userNote must be a string') as AppError; 
+            err.status = 400; 
+            err.log = 'itemController.create item: selectedText must be a string' ;
+            return next(err); 
         }
 
         const item = await prisma.savedItem.create({
             data: {
                 userId: req.user.id, 
-                title, 
-                url,
-                rawContent, 
+                title: title.trim(),
+                url: url.trim(),
+                rawContent: rawContent.trim(), 
                 selectedText, 
                 userNote,
             },
@@ -94,43 +119,54 @@ export const getItemById = async (req: AuthRequest, res: Response, next: NextFun
 
 export const updateItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        if (!req.user) {
-            const err = new Error('Unauthorized') as AppError;
-            err.status = 401;
-            err.log = 'itemController.updateItem: req.user missing';
-            return next(err);
-        }
-        
-        const id = req.params.id as string;
-        const { title, url, rawContent, selectedText, userNote } =req.body;
-
-        const existingItem = await prisma.savedItem.findFirst({
-            where: {
-                id,
-                userId: req.user.id,
-            },
-        });
-        if (!existingItem) {
-            const err = new Error('Item not found') as AppError;
-            err.status = 404;
-            err.log = `itemController.updateItem: no item found for id ${id}`;
-            return next(err);
-        }
-
-        const updatedItem = await prisma.savedItem.update({
-            where: { id }, 
-            data: {
-                ...(title !== undefined && { title }),
-                ...(url !== undefined && { url }),
-                ...(rawContent !== undefined && { rawContent }),
-                ...(selectedText !== undefined && { selectedText }),
-                ...(userNote !== undefined && { userNote }),
-            },
-        });
-        return res.status(200).json({ item: updatedItem }); 
-    } catch (error) {
-        return next(error); 
+    if (!req.user) {
+      const err = new Error('Unauthorized') as AppError;
+      err.status = 401;
+      err.log = 'itemController.updateItem: req.user missing';
+      return next(err);
     }
+
+    const id = req.params.id as string;
+    const { userNote } = req.body;
+
+    if (userNote !== undefined && typeof userNote !== 'string') {
+      const err = new Error('userNote must be a string') as AppError;
+      err.status = 400;
+      err.log = 'itemController.updateItem: userNote must be a string';
+      return next(err);
+    }
+    if (userNote === undefined) {
+        const err = new Error('userNote is required') as AppError;
+        err.status = 400;
+        err.log = 'itemController.updateItem: no editable fields provided';
+        return next(err);
+    }
+
+    const existingItem = await prisma.savedItem.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+    });
+
+    if (!existingItem) {
+      const err = new Error('Item not found') as AppError;
+      err.status = 404;
+      err.log = `itemController.updateItem: no item found for id ${id}`;
+      return next(err);
+    }
+
+    const updatedItem = await prisma.savedItem.update({
+      where: { id },
+      data: {
+        ...(userNote !== undefined && { userNote }),
+      },
+    });
+
+    return res.status(200).json({ item: updatedItem });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 export const deleteItem = async (req: AuthRequest, res: Response, next: NextFunction) => {

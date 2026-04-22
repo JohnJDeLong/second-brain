@@ -92,7 +92,7 @@ Build a personal knowledge app that lets users:
 - [ ] Add token expiration / session behavior notes
 - [ ] Decide whether refresh tokens are needed later
 - [ ] Add better auth input validation
-- [ ] Add consistent auth error response shapes
+- [x] Add consistent auth error response shapes
 
 ---
 
@@ -102,12 +102,13 @@ Build a personal knowledge app that lets users:
 - [x] Build `GET /api/items`
 - [x] Tie item creation to authenticated user
 - [x] Scope item retrieval to authenticated user
-- [ ] Build `GET /api/items/:id`
-- [ ] Build `PATCH /api/items/:id`
-- [ ] Build `DELETE /api/items/:id`
-- [ ] Enforce ownership checks on all item routes
+- [x] Build `GET /api/items/:id`
+- [x] Build `PATCH /api/items/:id`
+- [x] Build `DELETE /api/items/:id`
+- [x] Enforce ownership checks on all item routes
 - [ ] Return consistent item response shapes
-- [ ] Add item route validation
+- [x] Add validation to `POST /api/items` (type checks, trimming, required fields)
+- [x] Add validation to `PATCH /api/items/:id` (userNote-only for now, type check)
 - [ ] Add better item route error handling
 - [ ] Decide whether item updates should allow all editable fields or only some
 - [ ] Add route tests if test framework is introduced
@@ -117,13 +118,13 @@ Build a personal knowledge app that lets users:
 
 ## Validation / Error Handling
 
-- [ ] Validate required fields for item creation
+- [x] Validate required fields for item creation
 - [ ] Validate URL format where useful
 - [ ] Validate auth request body shapes
 - [ ] Normalize 400 vs 401 vs 403 vs 404 responses
-- [ ] Create consistent error response format
-- [ ] Add centralized Express error handling middleware
-- [ ] Add not-found handler for API routes
+- [x] Create consistent error response format
+- [x] Add centralized Express error handling middleware
+- [x] Add not-found handler for API routes
 - [ ] Add input trimming / normalization where helpful
 - [ ] Decide whether to use a validation library later
 - [ ] Add friendly error messages for common failures
@@ -192,7 +193,7 @@ Build a personal knowledge app that lets users:
 - [ ] Keep controller responsibilities narrow
 - [ ] Document backend architecture decisions
 - [ ] Add comments only where they improve clarity
-- [ ] Remove temporary test routes when no longer needed
+- [x] Remove `/api/test-db` route from `index.ts`
 - [ ] Replace ad hoc debug logging with intentional logs
 - [ ] Add clear naming conventions for controllers/services/routes
 
@@ -389,6 +390,9 @@ Build a personal knowledge app that lets users:
 
 ---
 
-## Immediate Next Task
+## Immediate Next Tasks
 
-- [ ] Build `GET /api/items/:id`
+- [x] Remove `/api/test-db` route from `index.ts`
+- [x] Add validation to `POST /api/items` (type checks, trimming, required fields)
+- [x] Add validation to `PATCH /api/items/:id` (userNote-only for now, type check)
+- [ ] Start `aiService.ts` (summary + tag generation)
