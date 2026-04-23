@@ -4,6 +4,10 @@ import { AuthRequest } from '../middleware/authMiddleware.js';
 import { AppError } from '../types/errors.js';
 import { generateSummary, generateTags } from '../services/aiService.js';
 
+const formatItem = (item: any) => ({
+  ...item,
+  tags: item.tags.map((itemTag: any) => itemTag.tag.name),
+});
 
 export const createItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -103,8 +107,16 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
             },
           },
         });
+
+       if(!itemWithTags) {
+        const err = new Error('Created item could not be retrieved') as AppError;
+        err.status = 500; 
+        err.log = `itemController.createItem: could not find newly created item ${item.id}`;
+        return next(err);
+       }
+       const formattedItem = formatItem(itemWithTags);
         
-        return res.status(201).json({ item: itemWithTags }); 
+        return res.status(201).json({ item: formattedItem }); 
 
     } catch (error) {
         return next(error);
@@ -124,9 +136,18 @@ export const getItems = async (req: AuthRequest, res: Response, next: NextFuncti
         const items = await prisma.savedItem.findMany({
             where: { userId: req.user.id },
             orderBy: { createdAt: 'desc' },
+            include: {
+              tags: {
+                include: {
+                  tag: true,
+                },
+              },
+            },
         });
 
-        return res.status(200).json({ items }); 
+        const formattedItems = items.map(formatItem);
+
+        return res.status(200).json({ items: formattedItems }); 
 
     } catch (error) {
         return next(error); 
@@ -149,6 +170,13 @@ export const getItemById = async (req: AuthRequest, res: Response, next: NextFun
         id,
         userId: req.user.id,
       },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
     });
 
     if (!item) {
@@ -158,7 +186,9 @@ export const getItemById = async (req: AuthRequest, res: Response, next: NextFun
         return next(err);
     }
 
-    return res.status(200).json({ item });
+    const formattedItem = formatItem(item); 
+
+    return res.status(200).json({ item: formattedItem });
   } catch (error) {
    return next(error); 
   }
