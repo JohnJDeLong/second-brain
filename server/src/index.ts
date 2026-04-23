@@ -5,6 +5,8 @@ import authRoutes from './routes/authRoutes.js';
 import itemRoutes from './routes/itemRoutes.js';
 import { notFound } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import searchRoutes from './routes/searchRoutes.js';
+
 
 console.log('index.ts is running');
 
@@ -28,6 +30,8 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes); 
+app.use('/api/search', searchRoutes);
+
 
 app.use(notFound);
 app.use(errorHandler);
