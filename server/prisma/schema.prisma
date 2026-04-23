@@ -22,6 +22,7 @@ model User {
   updatedAt    DateTime    @updatedAt
 
   savedItems   SavedItem[]
+  tags         Tag[]
 }
 
 model SavedItem {
@@ -44,10 +45,14 @@ model SavedItem {
 
 model Tag {
   id        String         @id @default(cuid())
-  name      String         @unique
+  userId    String
+  name      String
   createdAt DateTime       @default(now())
 
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   items     SavedItemTag[]
+
+  @@unique([userId, name])
 }
 
 model SavedItemTag {

@@ -2,6 +2,8 @@ import { NextFunction, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 import { AppError } from '../types/errors.js';
+import { generateSummary, generateTags } from '../services/aiService.js';
+
 
 export const createItem = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -26,38 +28,83 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
         }
 
         if(!title.trim() || !url.trim() || !rawContent.trim()) {
-            const err = new Error('title, url and rawContent are required') as AppError; 
+            const err = new Error('title, url, and rawContent are required') as AppError; 
             err.status = 400;
-            err.log = 'itmeController.createItem: required fields cannot be empty'; 
+            err.log = 'itemController.createItem: required fields cannot be empty'; 
             return next(err); 
         }
 
         if (selectedText !== undefined && typeof selectedText !== 'string') {
             const err = new Error('selectedText must be a string') as AppError; 
             err.status = 400; 
-            err.log = 'itemController.createItem: required fields cannot be empty'; 
+            err.log = 'itemController.createItem: selectedText must be a string'; 
             return next(err); 
         }
 
         if (userNote !== undefined && typeof userNote !== 'string') {
             const err = new Error('userNote must be a string') as AppError; 
             err.status = 400; 
-            err.log = 'itemController.create item: selectedText must be a string' ;
+            err.log = 'itemController.createItem: userNote must be a string' ;
             return next(err); 
         }
 
+        const trimmedTitle = title.trim(); 
+        const trimmedUrl = url.trim(); 
+        const trimmedRawContent = rawContent.trim(); 
+
+        const summary = await generateSummary(trimmedRawContent);
+        
+        const rawTagNames = await generateTags(trimmedRawContent);
+        const tagNames = [...new Set(rawTagNames.map(tag => tag.trim().toLowerCase()))];
+        
         const item = await prisma.savedItem.create({
             data: {
                 userId: req.user.id, 
-                title: title.trim(),
-                url: url.trim(),
-                rawContent: rawContent.trim(), 
-                selectedText, 
-                userNote,
+                title: trimmedTitle,
+                url: trimmedUrl,
+                rawContent: trimmedRawContent, 
+                selectedText: selectedText?.trim(),
+                userNote: userNote?.trim(),
+                aiSummary: summary,
             },
         });
+        for (const tagName of tagNames) {
+          if (!tagName) continue;// skip empty tags after trimming
+
+          const tag = await prisma.tag.upsert({
+            where: {
+              userId_name: {
+                userId: req.user.id,
+                name: tagName,
+              },
+            },
+            update: {},
+            create: {
+              userId: req.user.id,
+              name:tagName, 
+            }
+          });
+
+          await prisma.savedItemTag.create({
+            data: {
+              savedItemId: item.id,
+              tagId: tag.id,
+            },
+          });
+        }
+
+        const itemWithTags = await prisma.savedItem.findUnique({
+          where: { id: item.id },
+          include: {
+            tags: {
+              include: {
+                tag: true,
+              },
+            },
+          },
+        });
         
-        return res.status(201).json({ item }); 
+        return res.status(201).json({ item: itemWithTags }); 
 
     } catch (error) {
         return next(error);
