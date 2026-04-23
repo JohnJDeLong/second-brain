@@ -3,6 +3,14 @@ import prisma from '../lib/prisma.js';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 import { AppError } from '../types/errors.js';
 import { generateSummary, generateTags } from '../services/aiService.js';
+import { generateEmbedding } from '../services/embeddingService.js';
+
+
+
+
+
+
+
 
 const formatItem = (item: any) => ({
   ...item,
@@ -61,6 +69,9 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
         const rawTagNames = await generateTags(trimmedRawContent);
         const tagNames = [...new Set(rawTagNames.map(tag => tag.trim().toLowerCase()))];
         
+        const embeddingVector = await generateEmbedding(trimmedRawContent);
+
+
         const item = await prisma.savedItem.create({
             data: {
                 userId: req.user.id, 
@@ -72,6 +83,16 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
                 aiSummary: summary,
             },
         });
+
+        await prisma.embedding.create({
+          data: {
+            savedItemId: item.id,
+            vector: embeddingVector,
+          },
+        });
+
+
+
         for (const tagName of tagNames) {
           if (!tagName) continue;// skip empty tags after trimming
 
@@ -219,7 +240,7 @@ export const updateItem = async (req: AuthRequest, res: Response, next: NextFunc
         return next(err);
     }
 
-    const existingItem = await prisma.savedItem.findFirst({
+     const existingItem = await prisma.savedItem.findFirst({
       where: {
         id,
         userId: req.user.id,
@@ -236,11 +257,19 @@ export const updateItem = async (req: AuthRequest, res: Response, next: NextFunc
     const updatedItem = await prisma.savedItem.update({
       where: { id },
       data: {
-        ...(userNote !== undefined && { userNote }),
+        userNote,
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
+    const formattedItem = formatItem(updatedItem); 
 
-    return res.status(200).json({ item: updatedItem });
+    return res.status(200).json({ item: formattedItem });
   } catch (error) {
     return next(error);
   }
