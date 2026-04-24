@@ -1,5 +1,309 @@
 # Second Brain
 
+## Technical Overview
+
+Second Brain is a full-stack AI-assisted knowledge retrieval platform that enables users to capture, enrich, and semantically search saved web content.
+
+The system is designed around a modular service architecture supporting authenticated ingestion workflows, AI-assisted summarization pipelines, normalized tagging relationships, and cosine-similarity–based semantic retrieval.
+
+The project is structured to reflect production-style backend layering and scalable retrieval architecture rather than a single-layer tutorial implementation.
+
+---
+## System Architecture
+
+Second Brain follows a layered full-stack architecture designed to support scalable knowledge ingestion, enrichment, and semantic retrieval workflows.
+
+High-level system flow:
+
+User  
+→ React frontend dashboard  
+→ Express API (TypeScript service layer)  
+→ Authentication middleware (JWT validation)  
+→ Controller layer  
+→ Service layer  
+→ Prisma ORM  
+→ PostgreSQL database  
+
+Optional enrichment pipeline:
+
+Saved content  
+→ embedding generation  
+→ cosine similarity ranking  
+→ semantic search retrieval  
+
+Browser capture flow:
+
+User browsing  
+→ extension capture interface  
+→ authenticated API request  
+→ content persistence  
+→ enrichment pipeline  
+
+---
+
+## Backend Layer Responsibilities
+
+Routes
+
+Define API endpoints and attach middleware chains.
+
+Controllers
+
+Handle request validation and orchestrate service calls.
+
+Services
+
+Contain business logic such as:
+
+- semantic search ranking
+- tagging workflows
+- saved-item lifecycle operations
+- enrichment pipeline coordination
+
+Middleware
+
+Provide:
+
+- authentication validation
+- request shaping
+- error handling
+- authorization checks
+
+Database Layer
+
+Managed through Prisma ORM supporting:
+
+- relational consistency
+- normalized tagging schema
+- migration tracking
+- user-scoped persistence
+
+---
+
+## Retrieval Architecture
+
+Semantic retrieval pipeline:
+
+User query  
+→ embedding generation  
+→ similarity comparison against stored vectors  
+→ cosine similarity scoring  
+→ ranked results returned to client  
+
+Supports idea-based search rather than keyword-only lookup.
+
+Designed for future hybrid retrieval improvements:
+
+- keyword + vector fusion
+- chunk-based retrieval
+- retrieval-augmented question answering (RAG)
+
+---
+
+## Extension Capture Architecture
+
+Browser extension enables direct ingestion from web context:
+
+Page interaction  
+→ capture URL / selected text  
+→ attach metadata + notes  
+→ authenticated request to API  
+→ persistence layer  
+→ optional AI enrichment pipeline
+
+This supports frictionless knowledge capture without leaving browsing workflow.
+
+---
+
+## Future Architecture Expansion
+
+System is structured to support future additions without major refactors:
+
+Planned extensions include:
+
+- background job queue for enrichment processing
+- Redis caching layer for retrieval acceleration
+- hybrid semantic + keyword ranking
+- chat-based retrieval interface
+- multi-document synthesis workflows
+
+---
+
+## Stack
+
+Frontend: React  
+Backend: Express + TypeScript  
+Database: PostgreSQL via Prisma ORM  
+Auth: JWT middleware pipeline  
+Search: vector embeddings + cosine similarity ranking  
+Testing: Vitest integration testing  
+Extension: browser capture interface  
+Architecture: controller → service → middleware layering
+
+---
+
+## Example Feature Lifecycle: Semantic Search
+
+POST /search
+
+Pipeline:
+
+validate request  
+→ authenticate user  
+→ generate query embedding  
+→ compute similarity scores  
+→ rank saved items  
+→ return structured response  
+
+Implements retrieval beyond keyword matching.
+
+---
+
+## Backend Architecture
+
+Server structure follows production-style service layering:
+
+routes/  
+controllers/  
+services/  
+middleware/  
+utils/  
+types/  
+
+Responsibilities are separated to support:
+
+- maintainability
+- integration testing
+- modular feature ownership
+- scalable service evolution
+
+---
+
+
+## API Routes
+
+### Health Check
+
+**GET /api/health**
+
+Returns basic server status.
+
+---
+
+### Auth
+
+**POST /api/auth/signup**
+
+Creates a new user account.
+
+**POST /api/auth/login**
+
+Authenticates a user.
+
+**GET /api/auth/me**
+
+Returns the currently authenticated user.
+
+Protected: yes
+
+---
+
+### Saved Items
+
+**POST /api/items**
+
+Creates a new saved item.
+
+Protected: yes
+
+**GET /api/items**
+
+Returns all saved items for the authenticated user.
+
+Protected: yes
+
+**GET /api/items/:id**
+
+Returns a single saved item by ID.
+
+Protected: yes
+
+**PATCH /api/items/:id**
+
+Updates an existing saved item.
+
+Protected: yes
+
+**DELETE /api/items/:id**
+
+Deletes an existing saved item.
+
+Protected: yes
+
+---
+
+### Search
+
+**POST /api/search/semantic**
+
+Runs semantic search over the authenticated user’s saved items.
+
+Protected: yes
+---
+
+## Database Model
+
+Relational schema managed with Prisma migrations:
+
+users  
+saved_items  
+tags  
+saved_item_tags  
+
+Supports normalized tagging workflows and user-scoped retrieval.
+
+---
+
+## Testing Strategy
+
+Integration tests implemented using Vitest covering:
+
+route validation  
+controller behavior  
+middleware authorization  
+API response correctness  
+
+Designed to support regression-safe iteration as the service evolves.
+
+---
+
+## Browser Extension Capture Layer
+
+Includes extension-based ingestion workflow supporting:
+
+URL capture  
+selected text capture  
+user notes  
+metadata enrichment  
+
+Allows direct knowledge capture from browsing context.
+
+---
+
+## Deployment Status
+
+Planned production deployment:
+
+Frontend: planned (Render)  
+Backend API: planned (Render)  
+Database: PostgreSQL  
+
+Deployment will support authenticated ingestion, semantic retrieval, and AI enrichment workflows.
+
+---
+
+# Product Overview
+
 ## Overview
 
 Second Brain is a full-stack application designed to help users capture, organize, and retrieve meaningful information from the web.
@@ -126,156 +430,6 @@ Second Brain may be useful for:
 
 ---
 
-## Current / Planned Feature Areas
-
-The project is intentionally being built in layers.
-
-### Foundation
-- project structure
-- backend API
-- database models
-- environment configuration
-- authentication
-- protected routes
-
-### Content Ingestion
-- save a URL or article
-- capture title, source, and raw content
-- optionally support browser extension capture
-- optionally allow user notes or highlights
-
-### Knowledge Enrichment
-- AI summaries
-- AI-generated tags
-- processing status for saved items
-- future metadata extraction
-
-### Retrieval
-- keyword search
-- semantic search
-- filtering by tag or type
-- future ranking improvements
-
-### Grounded AI
-- question-answering over saved content
-- retrieval-augmented generation (RAG)
-- cited or source-backed responses
-- future multi-document synthesis
-
-### Interface
-- dashboard for browsing saved items
-- detail views
-- search UI
-- future chat interface
-- future browser extension UI
-
----
-
-## MVP Philosophy
-
-The MVP is meant to prove the core workflow, not solve every future use case.
-
-A successful MVP should demonstrate that users can:
-
-- create an account
-- save content
-- persist and retrieve that content
-- see AI-generated summaries/tags
-- search saved content
-- ask basic grounded questions over it
-
-Anything beyond that should be treated as an enhancement, not a requirement for the foundation to be considered successful.
-
----
-
-## Stretch Directions
-
-These are possible growth areas and should be treated as flexible rather than fixed commitments.
-
-### Retrieval Improvements
-- chunk-based retrieval
-- improved ranking
-- vector search optimization
-- hybrid keyword + semantic search
-
-### Better Knowledge Organization
-- folders or collections
-- favorites
-- archive states
-- related item suggestions
-
-### Richer Capture
-- browser extension workflows
-- selected text capture
-- page parsing improvements
-- import from bookmarks or external tools
-
-### AI Enhancements
-- stronger summaries
-- question-answering with source citations
-- concept linking across saved items
-- topic clustering
-- chat over personal saved content
-
-### Product Features
-- polished dashboard
-- onboarding
-- saved search views
-- activity history
-- collaboration or shared collections
-
----
-
-## Technical Intent
-
-This project is being built to support:
-
-- maintainable backend architecture
-- clear separation of concerns
-- a scalable data model
-- future AI and retrieval workflows
-- a codebase that other developers and tools can reason about easily
-
-Where possible, the repository should stay understandable to a new contributor without requiring deep project history.
-
----
-
-## Repository Intent for Future Developers and Agents
-
-This project should remain easy to navigate and easy to extend.
-
-When making changes, contributors should try to preserve:
-
-- clear folder structure
-- descriptive naming
-- small, focused modules
-- explicit data flow
-- a clean separation between persistence, business logic, and transport layers
-
-Future work should generally aim to support the broader vision of knowledge capture, enrichment, and retrieval rather than introducing disconnected features.
-
-When evaluating a new feature, a helpful question is:
-
-**Does this improve the user’s ability to save, organize, understand, retrieve, or use their knowledge later?**
-
-If the answer is yes, it is likely aligned with the purpose of the project.
-
----
-
-## Architecture Direction
-
-The intended architecture is roughly:
-
-- **capture layer** for ingesting content
-- **backend API** for authentication and business logic
-- **database layer** for persistence
-- **AI/retrieval layer** for summarization, embeddings, and question-answering
-- **frontend/dashboard layer** for user interaction
-
-This may evolve as the project grows, but the general direction should remain consistent.
-
----
-
 ## Current Status
 
 This project is actively evolving.
@@ -288,33 +442,6 @@ As the codebase grows, this document should be updated to reflect:
 - what is planned next
 - what architectural decisions have changed
 - what tradeoffs have been made
-
----
-
-## Contribution Mindset
-
-When contributing to this project:
-
-- try to understand the product goal, not just the immediate task
-- prefer simple and maintainable solutions
-- leave room for future retrieval and AI features
-- avoid overengineering early versions
-- document meaningful architectural or product decisions when they affect future work
-
----
-
-## Future Documentation Suggestions
-
-As the project matures, this README may later link out to more specific docs such as:
-
-- setup instructions
-- environment variables
-- API routes
-- schema overview
-- extension architecture
-- AI/retrieval design notes
-- deployment instructions
-- roadmap
 
 ---
 
