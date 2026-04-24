@@ -3,40 +3,8 @@ import prisma from '../lib/prisma.js';
 import { AuthRequest } from '../middleware/authMiddleware.js';
 import { AppError } from '../types/errors.js';
 import { generateEmbedding } from '../services/embeddingService.js';
-
-const cosineSimilarity = (a: number[], b: number[]): number => {
-  if (a.length !== b.length || a.length === 0) {
-    return 0;
-  }
-
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-
-  if (normA === 0 || normB === 0) {
-    return 0;
-  }
-
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-};
-
-const formatSearchItem = (item: any, score: number) => ({
-  id: item.id,
-  title: item.title,
-  url: item.url,
-  userNote: item.userNote,
-  aiSummary: item.aiSummary,
-  createdAt: item.createdAt,
-  updatedAt: item.updatedAt,
-  tags: item.tags.map((itemTag: any) => itemTag.tag.name),
-  score,
-});
+import { cosineSimilarity } from '../utils/similarity.js';
+import { formatSearchResult } from '../utils/formatters.js';
 
 export const semanticSearch = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try{
@@ -83,7 +51,7 @@ export const semanticSearch = async (req: AuthRequest, res: Response, next: Next
             .filter(item => Array.isArray(item.embedding?.vector) && item.embedding.vector.length > 0)
             .map(item => {
                 const score = cosineSimilarity(queryEmbedding, item.embedding!.vector);
-                return formatSearchItem(item, score);
+                return formatSearchResult(item, score);
             })
             .filter(item => item.score >= MIN_SCORE)
             .sort((a, b) => b.score - a.score);
