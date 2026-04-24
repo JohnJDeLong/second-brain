@@ -1,19 +1,28 @@
 # Second Brain
 
-## Technical Overview
+Second Brain is a full-stack TypeScript knowledge platform that enables users to capture, organize, and retrieve saved web content using semantic search and browser-extension ingestion workflows.
 
-Second Brain is a full-stack AI-assisted knowledge retrieval platform that enables users to capture, enrich, and semantically search saved web content.
+The system supports idea-based retrieval rather than keyword-only lookup through cosine-similarity ranking over stored content embeddings.
 
-The system is designed around a modular service architecture supporting authenticated ingestion workflows, AI-assisted summarization pipelines, normalized tagging relationships, and cosine-similarity–based semantic retrieval.
-
-The project is structured to reflect production-style backend layering and scalable retrieval architecture rather than a single-layer tutorial implementation.
+Built with React, Express, Prisma, PostgreSQL, and Vitest integration testing using a layered controller → service → middleware backend architecture.
 
 ---
-## System Architecture
 
-Second Brain follows a layered full-stack architecture designed to support scalable knowledge ingestion, enrichment, and semantic retrieval workflows.
+## Features
 
-High-level system flow:
+- JWT-secured authentication pipeline
+- Semantic search using cosine similarity ranking
+- Relational tagging system with Prisma ORM
+- Browser-extension ingestion workflow
+- RESTful API architecture with controller/service layering
+- Integration testing using Vitest
+- User-scoped retrieval workflows
+
+---
+
+## System Architecture Overview
+
+Second Brain follows a layered full-stack architecture:
 
 User  
 → React frontend dashboard  
@@ -22,22 +31,22 @@ User
 → Controller layer  
 → Service layer  
 → Prisma ORM  
-→ PostgreSQL database  
+→ PostgreSQL database
 
 Optional enrichment pipeline:
 
 Saved content  
 → embedding generation  
 → cosine similarity ranking  
-→ semantic search retrieval  
+→ semantic search retrieval
 
 Browser capture flow:
 
 User browsing  
 → extension capture interface  
 → authenticated API request  
-→ content persistence  
-→ enrichment pipeline  
+→ persistence layer  
+→ enrichment pipeline
 
 ---
 
@@ -144,7 +153,7 @@ Architecture: controller → service → middleware layering
 
 ## Example Feature Lifecycle: Semantic Search
 
-POST /search
+POST /api/search/semantic
 
 Pipeline:
 
