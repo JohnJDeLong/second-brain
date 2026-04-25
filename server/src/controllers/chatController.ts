@@ -48,7 +48,7 @@ export const chat = async (req: AuthRequest,res: Response, next: NextFunction) =
       },
     });
 
-    const MIN_SCORE = 0.7;
+    const MIN_SCORE = 0.6;
     const MAX_SOURCES = 3;
 
     const relevantItems = items
