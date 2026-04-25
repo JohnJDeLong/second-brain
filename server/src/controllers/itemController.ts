@@ -74,6 +74,7 @@ export const createItem = async (req: AuthRequest, res: Response, next: NextFunc
 
         const item = await prisma.savedItem.create({
             data: {
+                processingStatus: 'completed',
                 userId: req.user.id, 
                 title: trimmedTitle,
                 url: trimmedUrl,
@@ -305,6 +306,145 @@ export const deleteItem = async (req: AuthRequest, res: Response, next: NextFunc
     });
 
     return res.status(200).json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+
+
+export const reprocessItem = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (!req.user) {
+      const err = new Error('Unauthorized') as AppError;
+      err.status = 401;
+      err.log = 'itemController.reprocessItem: req.user missing';
+      return next(err);
+    }
+
+    const id = req.params.id as string;
+
+    const existingItem = await prisma.savedItem.findFirst({
+      where: {
+        id,
+        userId: req.user.id,
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+        embedding: true,
+      },
+    });
+
+    if (!existingItem) {
+      const err = new Error('Item not found') as AppError;
+      err.status = 404;
+      err.log = `itemController.reprocessItem: no item found for id ${id}`;
+      return next(err);
+    }
+
+    const rawContent = existingItem.rawContent.trim();
+
+    if (!rawContent) {
+      const err = new Error('Item rawContent is required for reprocessing') as AppError;
+      err.status = 400;
+      err.log = `itemController.reprocessItem: empty rawContent for item ${id}`;
+      return next(err);
+    }
+
+    const summary = await generateSummary(rawContent);
+    const rawTagNames = await generateTags(rawContent);
+    const tagNames = [...new Set(rawTagNames.map(tag => tag.trim().toLowerCase()))];
+    const embeddingVector = await generateEmbedding(rawContent);
+
+    const updatedItem = await prisma.savedItem.update({
+      where: { id },
+      data: {
+        aiSummary: summary,
+        processingStatus: 'completed',
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+        embedding: true,
+      },
+    });
+
+    await prisma.embedding.upsert({
+      where: {
+        savedItemId: id,
+      },
+      update: {
+        vector: embeddingVector,
+      },
+      create: {
+        savedItemId: id,
+        vector: embeddingVector,
+      },
+    });
+
+    await prisma.savedItemTag.deleteMany({
+      where: {
+        savedItemId: id,
+      },
+    });
+
+    for (const tagName of tagNames) {
+      if (!tagName) continue;
+
+      const tag = await prisma.tag.upsert({
+        where: {
+          userId_name: {
+            userId: req.user.id,
+            name: tagName,
+          },
+        },
+        update: {},
+        create: {
+          userId: req.user.id,
+          name: tagName,
+        },
+      });
+
+      await prisma.savedItemTag.create({
+        data: {
+          savedItemId: id,
+          tagId: tag.id,
+        },
+      });
+    }
+
+    const refreshedItem = await prisma.savedItem.findUnique({
+      where: { id },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
+      },
+    });
+
+    if (!refreshedItem) {
+      const err = new Error('Reprocessed item could not be retrieved') as AppError;
+      err.status = 500;
+      err.log = `itemController.reprocessItem: could not retrieve item ${id} after reprocessing`;
+      return next(err);
+    }
+
+    const formattedItem = formatItem(refreshedItem);
+
+    return res.status(200).json({ item: formattedItem });
   } catch (error) {
     return next(error);
   }
