@@ -5,7 +5,7 @@ import { AppError } from '../types/errors.js';
 import { generateEmbedding } from '../services/embeddingService.js';
 import { cosineSimilarity } from '../utils/similarity.js';
 import { formatChatSource } from '../utils/formatters.js';
-
+import { generateGroundedAnswer } from '../services/chatService.js';
 
 export const chat = async (req: AuthRequest,res: Response, next: NextFunction) => {
   try {
@@ -65,11 +65,7 @@ export const chat = async (req: AuthRequest,res: Response, next: NextFunction) =
       .sort((a, b) => b.score - a.score)
       .slice(0, MAX_SOURCES);
 
-    const answer =
-      relevantItems.length > 0
-        ? `Based on your saved content, I found ${relevantItems.length} relevant item(s) related to "${query.trim()}".`
-        : `I could not find any strongly relevant saved items for "${query.trim()}".`;
-
+    const answer = await generateGroundedAnswer(query.trim(), relevantItems);
     return res.status(200).json({
       answer,
       sources: relevantItems,
