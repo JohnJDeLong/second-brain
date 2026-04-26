@@ -1,5 +1,6 @@
 # dependencies
 node_modules/
+client/node_modules/
 server/node_modules/
 
 # environment variables
@@ -16,11 +17,15 @@ Agents.local.md
 
 # generated files
 server/src/generated/
+generated/prisma/
+server/generated/prisma/
 
 # build output
 dist/
 build/
 coverage/
+client/dist/
+server/dist/
 
 # logs
 npm-debug.log*
@@ -35,5 +40,3 @@ pnpm-debug.log*
 
 # misc
 *.tsbuildinfo
-generated/prisma/
-server/generated/prisma/
