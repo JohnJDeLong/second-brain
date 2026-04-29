@@ -1,0 +1,1 @@
+ALTER TABLE IF EXISTS public._prisma_migrations ENABLE ROW LEVEL SECURITY;
