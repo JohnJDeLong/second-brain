@@ -1,27 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getMe } from "../api/auth";
 import { getItems } from "../api/items";
+import type { Item } from "../types/item";
+import type { User } from "../types/user";
 
-type User = {
-  id: string;
-  email: string;
-  createdAt: string;
-};
 
-type Item = {
-  id: string;
-  title: string;
-  url: string;
-  rawContent: string;
-  selectedText: string | null;
-  userNote: string | null;
-  aiSummary: string | null;
-  processingStatus: "pending" | "completed" | "failed";
-  createdAt: string;
-  updatedAt: string;
-  tags: string[];
-};
+
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -99,7 +84,9 @@ export default function DashboardPage() {
           <ul>
             {items.map((item) => (
               <li key={item.id}>
-                <h3>{item.title}</h3>
+                <h3>
+                  <Link to={`/items/${item.id}`}>{item.title}</Link>
+                </h3>
                 <p>{item.aiSummary || "No summary available."}</p>
 
                 {item.userNote && <p>Note: {item.userNote}</p>}
