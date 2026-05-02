@@ -29,3 +29,21 @@ export const getItemById = async(token: string, id: string) => {
   }
   return data;
 };
+
+export const updateItemNote = async (token: string, id: string, userNote: string) => {
+  const response = await fetch(`${API_BASE_URL}/items/${id}`, {
+    method: "PATCH", 
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ userNote }),
+  });
+
+  const data = await response.json(); 
+
+  if (!response.ok) { 
+    throw new Error (data.error || "Failed to update item note"); 
+  }
+  return data; 
+};

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { getItemById } from "../api/items";
+import { getItemById, updateItemNote } from "../api/items";
 import type { Item } from "../types/item";
 
 
@@ -11,6 +11,11 @@ export default function ItemDetailPage() {
     const [item, setItem] = useState<Item | null>(null); 
     const [error, setError] = useState(''); 
     const [isLoading, setIsLoading] = useState(true); 
+
+    const [editedNote, setEditedNote] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState("");
+
     useEffect(() => {
         const loadItem = async () => {
             const token = localStorage.getItem('token');
@@ -27,8 +32,10 @@ export default function ItemDetailPage() {
             }
 
             try { 
+
                 const data = await getItemById(token, id); 
                 setItem(data.item); 
+                setEditedNote(data.item.userNote || "");
             } catch (error) {
                 setError(error instanceof Error ? error.message : "Failed to load item");
             } finally {
@@ -37,6 +44,30 @@ export default function ItemDetailPage() {
         };
         loadItem(); 
     },[id,navigate]);
+
+
+    const handleSaveNote = async () => {
+        const token = localStorage.getItem("token"); 
+
+        if(!token || !id) {
+            navigate("/login");
+            return;
+        }
+        try{
+            setSaveError("");
+            setIsSaving(true);
+
+            const data = await updateItemNote(token, id, editedNote);
+            setItem(data.item);
+            setEditedNote(data.item.userNote || "");
+        } catch (error) {
+            setSaveError(
+                error instanceof Error ? error.message : "Failed to save note"
+            );
+        } finally{
+            setIsSaving(false); 
+        }
+    };
 
     if (isLoading) {
         return <main>Loading item...</main>
@@ -66,9 +97,24 @@ export default function ItemDetailPage() {
                 <strong>Summary:</strong> {item.aiSummary || "No summary available."}
             </p>
 
-            {item.userNote && (
+            <section>
+                <h2>Edit Note</h2>
+
+                <textarea
+                    value={editedNote}
+                    onChange={(event) => setEditedNote(event.target.value)}
+                    rows={6}
+                />
+
+                {saveError && <p>{saveError}</p>}
+
+                <button type="button" onClick={handleSaveNote} disabled={isSaving}>
+                    {isSaving ? "Saving..." : "Save Note"}
+                </button>
+            </section>
+           {item.userNote && (
                 <p>
-                <strong>Note:</strong> {item.userNote}
+                    <strong>Note:</strong> {item.userNote}
                 </p>
             )}
 
